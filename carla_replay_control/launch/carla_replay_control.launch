@@ -1,5 +1,8 @@
 <!-- -->
 <launch>
+  <arg name='host' default='localhost'/>
+  <arg name='port' default='2000'/>
+  <arg name='timeout' default='10'/>
   <arg name="log_file" default="latest.log"/>
   <arg name="start" default="0"/>
   <arg name="duration" default="300"/>
