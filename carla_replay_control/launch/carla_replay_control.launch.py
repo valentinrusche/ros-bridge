@@ -22,7 +22,7 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='carla_replay_control',
             executable='carla_replay_control',
-            name='carla_replay_control', launch.substitutions.LaunchConfiguration('log_file'),
+            name='carla_replay_control',
             output='screen',
             emulate_tty=True,
             parameters=[
