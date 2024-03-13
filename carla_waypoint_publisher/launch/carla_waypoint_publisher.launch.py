@@ -20,6 +20,10 @@ def generate_launch_description():
             name='role_name',
             default_value='ego_vehicle'
         ),
+        launch.actions.DeclareLaunchArgument(
+            name='waypoints_distance',
+            default_value='2.0'
+        ),
         launch_ros.actions.Node(
             package='carla_waypoint_publisher',
             executable='carla_waypoint_publisher',
@@ -38,6 +42,9 @@ def generate_launch_description():
                 },
                 {
                     'role_name': launch.substitutions.LaunchConfiguration('role_name')
+                },
+                {
+                    'waypoints_distance': launch.substitutions.LaunchConfiguration('waypoints_distance')
                 }
             ]
         )

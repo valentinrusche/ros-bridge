@@ -4,9 +4,11 @@
   <arg name='port' default='2000'/>
   <arg name='timeout' default='10'/>
   <arg name="role_name" default="ego_vehicle" />
+  <arg name='waypoints_distance' default='2.0' />
 
   <node pkg="carla_waypoint_publisher" type="carla_waypoint_publisher.py" name="carla_waypoint_publisher" output="screen">
     <param name="role_name" value="$(arg role_name)" />
+    <param name="waypoints_distance" value="$(arg waypoints_distance)" />
     <param name="host" value="$(arg host)" />
     <param name="port" value="$(arg port)" />
     <param name="timeout" value="$(arg timeout)" />
