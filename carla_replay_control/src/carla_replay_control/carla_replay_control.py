@@ -9,6 +9,7 @@ from __future__ import print_function
 
 from threading import Thread
 import signal
+from time import sleep
 from typing import NoReturn
 
 import ros_compatibility as roscomp
@@ -28,14 +29,15 @@ class ReplayControl(CompatibleNode):
 
     def __init__(self) -> None:
         super(ReplayControl, self).__init__("carla_replay_control")
-        self.log_file = self.get_param("log_file")
-        self.start = int(self.get_param("start"))
-        self.duration = int(self.get_param("duration"))
-        self.camera_id = int(self.get_param("camera_id"))
-        self.replay_sensors = bool(self.get_param("replay_sensors"))
+        self.log_file: str = str(self.get_param("log_file"))
+        self.start: int = int(self.get_param("start"))
+        self.duration: int = int(self.get_param("duration"))
+        self.camera_id: int = int(self.get_param("camera_id"))
+        self.replay_sensors: int = bool(self.get_param("replay_sensors"))
+        self.world = None
 
         self.connect_to_carla()
-        self.replay_file(path=self.log_file, start=self.start, duration=self.duration, camera_id=self.camera_id, replay_sensors=self.replay_sensors)
+        self.replay_file(self.log_file, self.start, self.duration, self.camera_id, self.replay_sensors)
 
     def connect_to_carla(self) -> None:
 
@@ -66,26 +68,27 @@ class ReplayControl(CompatibleNode):
 
         self.loginfo("Connected to Carla.")
 
-    def timeout_handler(self) -> NoReturn:   # Custom signal handler
-        raise StopReplay
 
     def replay_file(self, path: str, start: int, duration: int, camera_id: int, replay_sensors: bool) -> None:
+        while self.world is None:
+            self.loginfo("World not available. Cannot start replay. Sleeping for 5 seconds")
+            sleep(5.0)
         # register StopReplayHandler to signal
-        signal.signal(signal.SIGALRM, self.timeout_handler)
-
-        # Start the timer. Once the replay duration is over, a SIGALRM signal is sent.
-        # This ensures that the node will shutdown after the replay to not generate noise
-        # as carla will simulate all actors after the replay has stopped.
-        signal.alarm(self.duration)
+        self.thread = Thread(target=self.stop_replay_and_shutdown)
+        self.thread.start()
 
         try:
            self.loginfo("Starting replay of file {} with start {} and duration {}".format(path, start, duration))
-           self.carla_client.replay_file(path, start, duration, camera_id, replay_sensors)
-        except StopReplay:
-            self.loginfo("Replay stopped after {} seconds".format(duration))
-            self.stop_replay_and_shutdown()
+        #    self.carla_client.set_replayer_time_factor(1.0)
+        #    self.carla_client.set_replayer_ignore_hero(False)
+        #    self.carla_client.set_replayer_ignore_spectator(True)
+           self.loginfo(self.carla_client.replay_file(path, start, duration, camera_id, replay_sensors))
+        finally:
+            pass
 
     def stop_replay_and_shutdown(self) -> None:
+        sleep(float(self.duration))
+        self.carla_client.stop_replayer()
         self.destroy_node()
 
 def main(args=None) -> None:
