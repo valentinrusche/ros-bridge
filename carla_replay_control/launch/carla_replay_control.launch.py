@@ -7,18 +7,12 @@ def generate_launch_description():
         launch.actions.DeclareLaunchArgument(name='host', default_value='localhost'),
         launch.actions.DeclareLaunchArgument(name='port', default_value='2000'),
         launch.actions.DeclareLaunchArgument(name='timeout', default_value='10'),
-        launch.actions.DeclareLaunchArgument('log_file', default_value='latest.log'),
-        launch.actions.DeclareLaunchArgument('start', default_value='0'),
-        launch.actions.DeclareLaunchArgument('duration', default_value='300'),
-        launch.actions.DeclareLaunchArgument('camera_id', default_value='0'),
-        launch.actions.DeclareLaunchArgument('replay_sensors', default_value='true'),
-        launch.actions.LogInfo(msg=f"""Launching with arguments:
-                                log_file={launch.substitutions.LaunchConfiguration('log_file')}
-                                start={launch.substitutions.LaunchConfiguration('start')}
-                                duration={launch.substitutions.LaunchConfiguration('duration')}
-                                camera_id={launch.substitutions.LaunchConfiguration('camera_id')}
-                                replay_sensors={launch.substitutions.LaunchConfiguration('replay_sensors')}
-                            """),
+        launch.actions.DeclareLaunchArgument(name='log_file', default_value='latest.log'),
+        launch.actions.DeclareLaunchArgument(name='start', default_value='0'),
+        launch.actions.DeclareLaunchArgument(name='duration', default_value='300'),
+        launch.actions.DeclareLaunchArgument(name='camera_id', default_value='0'),
+        launch.actions.DeclareLaunchArgument(name='replay_sensors', default_value='true'),
+        launch.actions.DeclareLaunchArgument(name='keep_actors', default_value='false'),
         launch_ros.actions.Node(
             package='carla_replay_control',
             executable='carla_replay_control',
@@ -33,7 +27,8 @@ def generate_launch_description():
                 {'start': launch.substitutions.LaunchConfiguration('start')},
                 {'duration': launch.substitutions.LaunchConfiguration('duration')},
                 {'camera_id': launch.substitutions.LaunchConfiguration('camera_id')},
-                {'replay_sensors': launch.substitutions.LaunchConfiguration('replay_sensors')}
+                {'replay_sensors': launch.substitutions.LaunchConfiguration('replay_sensors')},
+                {'keep_actors': launch.substitutions.LaunchConfiguration('keep_actors')},
             ]
         )
     ])

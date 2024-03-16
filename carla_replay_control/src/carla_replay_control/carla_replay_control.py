@@ -8,9 +8,7 @@
 from __future__ import print_function
 
 from threading import Thread
-import signal
 from time import sleep
-from typing import NoReturn
 
 import ros_compatibility as roscomp
 from ros_compatibility.node import CompatibleNode
@@ -34,6 +32,7 @@ class ReplayControl(CompatibleNode):
         self.duration: int = int(self.get_param("duration"))
         self.camera_id: int = int(self.get_param("camera_id"))
         self.replay_sensors: int = bool(self.get_param("replay_sensors"))
+        self.keep_actors_after_replay: bool = bool(self.get_param("keep_actors"))
         self.world = None
 
         self.connect_to_carla()
@@ -88,7 +87,7 @@ class ReplayControl(CompatibleNode):
 
     def stop_replay_and_shutdown(self) -> None:
         sleep(float(self.duration))
-        self.carla_client.stop_replayer()
+        self.carla_client.stop_replayer(self.keep_actors_after_replay)
         self.destroy_node()
 
 def main(args=None) -> None:

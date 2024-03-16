@@ -8,6 +8,7 @@
   <arg name="duration" default="300"/>
   <arg name="camera_id" default="0"/>
   <arg name="replay_sensors" default="true"/>
+  <arg name="keep_actors" default="false"/>
 
   <node pkg="carla_replay_control" type="carla_replay_control.py" name="carla_replay_control_$(arg log_file)" output="screen">
     <param name="log_file" value="$(arg log_file)"/>
@@ -15,6 +16,7 @@
     <param name="duration" value="$(arg duration)"/>
     <param name="camera_id" value="$(arg camera_id)"/>
     <param name="replay_sensors" value="$(arg replay_sensors)"/>
+    <param name="keep_actors" value="$(arg keep_actors)"/>
   </node>
 
 </launch>
