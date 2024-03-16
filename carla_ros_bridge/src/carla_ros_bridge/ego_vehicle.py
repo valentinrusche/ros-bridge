@@ -13,7 +13,7 @@ import math
 import os
 
 import numpy
-from carla import VehicleControl
+from carla import VehicleControl, VehicleWheelLocation
 
 from ros_compatibility.qos import QoSProfile, DurabilityPolicy
 
@@ -23,7 +23,8 @@ from carla_msgs.msg import (
     CarlaEgoVehicleInfo,
     CarlaEgoVehicleInfoWheel,
     CarlaEgoVehicleControl,
-    CarlaEgoVehicleStatus
+    CarlaEgoVehicleStatus,
+    CarlaEgoVehicleSteering
 )
 from std_msgs.msg import Bool  # pylint: disable=import-error
 from std_msgs.msg import ColorRGBA  # pylint: disable=import-error
@@ -63,6 +64,10 @@ class EgoVehicle(Vehicle):
         self.vehicle_status_publisher = node.new_publisher(
             CarlaEgoVehicleStatus,
             self.get_topic_prefix() + "/vehicle_status",
+            qos_profile=10)
+        self.vehicle_steering_publisher = node.new_publisher(
+            CarlaEgoVehicleSteering,
+            self.get_topic_prefix() + "/vehicle_steering",
             qos_profile=10)
         self.vehicle_info_publisher = node.new_publisher(
             CarlaEgoVehicleInfo,
@@ -128,6 +133,17 @@ class EgoVehicle(Vehicle):
         vehicle_status.control.gear = self.carla_actor.get_control().gear
         vehicle_status.control.manual_gear_shift = self.carla_actor.get_control().manual_gear_shift
         self.vehicle_status_publisher.publish(vehicle_status)
+        
+        vehicle_steering = CarlaEgoVehicleSteering(
+            header=self.get_msg_header("map", timestamp=timestamp))
+        wheel_fl_angle = self.carla_actor.get_wheel_steer_angle(
+            VehicleWheelLocation.FL_Wheel)
+        wheel_fr_angle = self.carla_actor.get_wheel_steer_angle(
+            VehicleWheelLocation.FR_Wheel)
+        wheel_avg_angle = (wheel_fl_angle + wheel_fr_angle) / 2.0
+        wheel_avg_angle = numpy.radians(wheel_avg_angle)
+        vehicle_steering.steering_tire_angle = wheel_avg_angle
+        self.vehicle_steering_publisher.publish(vehicle_steering)
 
         # only send vehicle once (in latched-mode)
         if not self.vehicle_info_published:

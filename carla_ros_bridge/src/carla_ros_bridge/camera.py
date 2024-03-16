@@ -26,6 +26,8 @@ from carla_ros_bridge.sensor import Sensor, create_cloud
 
 from sensor_msgs.msg import CameraInfo, Image, PointCloud2, PointField
 
+from rclpy import qos
+
 ROS_VERSION = get_ros_version()
 
 
@@ -38,7 +40,7 @@ class Camera(Sensor):
     # global cv bridge to convert image between opencv and ros
     cv_bridge = CvBridge()
 
-    def __init__(self, uid, name, parent, relative_spawn_pose, node, carla_actor, synchronous_mode, is_event_sensor=False):  # pylint: disable=too-many-arguments
+    def __init__(self, uid, name, parent, relative_spawn_pose, node, carla_actor, synchronous_mode, is_event_sensor=False, frame_id=None):  # pylint: disable=too-many-arguments
         """
         Constructor
 
@@ -75,7 +77,9 @@ class Camera(Sensor):
         self.camera_info_publisher = node.new_publisher(CameraInfo, self.get_topic_prefix() +
                                                         '/camera_info', qos_profile=10)
         self.camera_image_publisher = node.new_publisher(Image, self.get_topic_prefix() +
-                                                         '/' + 'image', qos_profile=10)
+                                                         '/' + 'image', qos_profile=qos.qos_profile_sensor_data)
+        
+        self._frame_id = frame_id
 
     def destroy(self):
         super(Camera, self).destroy()
@@ -162,7 +166,7 @@ class Camera(Sensor):
             carla_camera_data)
         img_msg = Camera.cv_bridge.cv2_to_imgmsg(image_data_array, encoding=encoding)
         # the camera data is in respect to the camera's own frame
-        img_msg.header = self.get_msg_header(timestamp=carla_camera_data.timestamp)
+        img_msg.header = self.get_msg_header(frame_id=self._frame_id, timestamp=carla_camera_data.timestamp)
 
         return img_msg
 
@@ -185,7 +189,7 @@ class RgbCamera(Camera):
     Camera implementation details for rgb camera
     """
 
-    def __init__(self, uid, name, parent, relative_spawn_pose, node, carla_actor, synchronous_mode):
+    def __init__(self, uid, name, parent, relative_spawn_pose, node, carla_actor, synchronous_mode, frame_id=None):
         """
         Constructor
 
@@ -210,9 +214,12 @@ class RgbCamera(Camera):
                                         relative_spawn_pose=relative_spawn_pose,
                                         node=node,
                                         carla_actor=carla_actor,
-                                        synchronous_mode=synchronous_mode)
+                                        synchronous_mode=synchronous_mode,
+                                        frame_id=frame_id)
 
+        self._frame_id = frame_id
         self.listen()
+        
 
     def get_carla_image_data_array(self, carla_image):
         """

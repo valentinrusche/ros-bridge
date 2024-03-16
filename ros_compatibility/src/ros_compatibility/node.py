@@ -125,10 +125,13 @@ elif ROS_VERSION == 2:
 
 
     def _get_rclpy_qos_profile(qos_profile):
-        return rclpy.qos.QoSProfile(
-            depth=qos_profile.depth,
-            durability=_DURABILITY_POLICY_MAP[qos_profile.durability]
-        )
+        if qos_profile == rclpy.qos.qos_profile_sensor_data:
+            return rclpy.qos.qos_profile_sensor_data
+        else:
+            return rclpy.qos.QoSProfile(
+                depth=qos_profile.depth,
+                durability=_DURABILITY_POLICY_MAP[qos_profile.durability]
+            )
 
 
     class CompatibleNode(Node):

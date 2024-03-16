@@ -16,6 +16,7 @@ import numpy
 from carla_ros_bridge.sensor import Sensor, create_cloud
 
 from sensor_msgs.msg import PointCloud2, PointField
+from rclpy import qos
 
 
 class Lidar(Sensor):
@@ -24,7 +25,7 @@ class Lidar(Sensor):
     Actor implementation details for lidars
     """
 
-    def __init__(self, uid, name, parent, relative_spawn_pose, node, carla_actor, synchronous_mode):
+    def __init__(self, uid, name, parent, relative_spawn_pose, node, carla_actor, synchronous_mode, frame_id):
         """
         Constructor
 
@@ -53,8 +54,10 @@ class Lidar(Sensor):
 
         self.lidar_publisher = node.new_publisher(PointCloud2,
                                                   self.get_topic_prefix(),
-                                                  qos_profile=10)
+                                                  qos_profile=qos.qos_profile_sensor_data)
         self.listen()
+        self.channels = int(self.carla_actor.attributes.get('channels'))
+        self._frame_id = frame_id
 
     def destroy(self):
         super(Lidar, self).destroy()
@@ -68,18 +71,30 @@ class Lidar(Sensor):
         :param carla_lidar_measurement: carla lidar measurement object
         :type carla_lidar_measurement: carla.LidarMeasurement
         """
-        header = self.get_msg_header(timestamp=carla_lidar_measurement.timestamp)
+        header = self.get_msg_header(frame_id=self._frame_id , timestamp=carla_lidar_measurement.timestamp)
         fields = [
             PointField(name='x', offset=0, datatype=PointField.FLOAT32, count=1),
             PointField(name='y', offset=4, datatype=PointField.FLOAT32, count=1),
             PointField(name='z', offset=8, datatype=PointField.FLOAT32, count=1),
-            PointField(name='intensity', offset=12, datatype=PointField.FLOAT32, count=1)
+            PointField(name='intensity', offset=12, datatype=PointField.FLOAT32, count=1),
+            PointField(name='ring', offset=16, datatype=PointField.UINT16, count=1)
         ]
 
         lidar_data = numpy.fromstring(
             bytes(carla_lidar_measurement.raw_data), dtype=numpy.float32)
         lidar_data = numpy.reshape(
             lidar_data, (int(lidar_data.shape[0] / 4), 4))
+        
+        ring = numpy.empty((0,1), object)
+        
+        for i in range(self.channels):
+            current_ring_points_count = carla_lidar_measurement.get_point_count(i)
+            ring = numpy.vstack((
+                ring,
+                numpy.full((current_ring_points_count, 1), i)))
+        
+        lidar_data = numpy.hstack((lidar_data, ring))
+        
         # we take the opposite of y axis
         # (as lidar point are express in left handed coordinate system, and ros need right handed)
         lidar_data[:, 1] *= -1

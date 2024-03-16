@@ -22,7 +22,7 @@ class ImuSensor(Sensor):
     Actor implementation details for imu sensor
     """
 
-    def __init__(self, uid, name, parent, relative_spawn_pose, node, carla_actor, synchronous_mode):
+    def __init__(self, uid, name, parent, relative_spawn_pose, node, carla_actor, synchronous_mode, frame_id):
         """
         Constructor
 
@@ -52,6 +52,8 @@ class ImuSensor(Sensor):
         self.imu_publisher = node.new_publisher(Imu, self.get_topic_prefix(), qos_profile=10)
         self.listen()
 
+        self._frame_id = frame_id
+
     def destroy(self):
         super(ImuSensor, self).destroy()
         self.node.destroy_publisher(self.imu_publisher)
@@ -65,7 +67,7 @@ class ImuSensor(Sensor):
         :type carla_imu_measurement: carla.IMUMeasurement
         """
         imu_msg = Imu()
-        imu_msg.header = self.get_msg_header(timestamp=carla_imu_measurement.timestamp)
+        imu_msg.header = self.get_msg_header(frame_id=self._frame_id, timestamp=carla_imu_measurement.timestamp)
 
         # Carla uses a left-handed coordinate convention (X forward, Y right, Z up).
         # Here, these measurements are converted to the right-handed ROS convention

@@ -135,6 +135,9 @@ class CarlaSpawnObjects(CompatibleNode):
                 spawn_object_request.id = vehicle["id"]
                 spawn_object_request.attach_to = 0
                 spawn_object_request.random_pose = False
+                for attribute, value in vehicle["attributes"].items():
+                    spawn_object_request.attributes.append(
+                        KeyValue(key=str(attribute), value=str(value)))
 
                 spawn_point = None
 
@@ -203,6 +206,7 @@ class CarlaSpawnObjects(CompatibleNode):
             try:
                 sensor_type = str(sensor_spec.pop("type"))
                 sensor_id = str(sensor_spec.pop("id"))
+                sensor_frame_id = str(sensor_spec.pop("frame_id", None))
 
                 sensor_name = sensor_type + "/" + sensor_id
                 if sensor_name in sensor_names:
@@ -235,6 +239,7 @@ class CarlaSpawnObjects(CompatibleNode):
                 spawn_object_request = roscomp.get_service_request(SpawnObject)
                 spawn_object_request.type = sensor_type
                 spawn_object_request.id = sensor_id
+                spawn_object_request.frame_id = sensor_frame_id
                 spawn_object_request.attach_to = attached_vehicle_id if attached_vehicle_id is not None else 0
                 spawn_object_request.transform = sensor_transform
                 spawn_object_request.random_pose = False  # never set a random pose for a sensor

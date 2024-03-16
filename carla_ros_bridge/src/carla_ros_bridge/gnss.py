@@ -21,7 +21,7 @@ class Gnss(Sensor):
     Actor implementation details for gnss sensor
     """
 
-    def __init__(self, uid, name, parent, relative_spawn_pose, node, carla_actor, synchronous_mode):
+    def __init__(self, uid, name, parent, relative_spawn_pose, node, carla_actor, synchronous_mode, frame_id):
         """
         Constructor
 
@@ -53,6 +53,8 @@ class Gnss(Sensor):
                                                  qos_profile=10)
         self.listen()
 
+        self._frame_id = frame_id
+
     def destroy(self):
         super(Gnss, self).destroy()
         self.node.destroy_publisher(self.gnss_publisher)
@@ -66,7 +68,7 @@ class Gnss(Sensor):
         :type carla_gnss_measurement: carla.GnssMeasurement
         """
         navsatfix_msg = NavSatFix()
-        navsatfix_msg.header = self.get_msg_header(timestamp=carla_gnss_measurement.timestamp)
+        navsatfix_msg.header = self.get_msg_header(frame_id=self._frame_id, timestamp=carla_gnss_measurement.timestamp)
         navsatfix_msg.latitude = carla_gnss_measurement.latitude
         navsatfix_msg.longitude = carla_gnss_measurement.longitude
         navsatfix_msg.altitude = carla_gnss_measurement.altitude
