@@ -26,7 +26,7 @@ RUN /bin/bash -c 'source /opt/ros/$ROS_DISTRO/setup.bash; \
 
 COPY . /opt/carla-ros-bridge/src/
 RUN /bin/bash -c 'source /opt/ros/$ROS_DISTRO/setup.bash; \
-    if [ "$ROS_VERSION" == "2" ]; then colcon build; else catkin_make install; fi'
+    if [ "$ROS_VERSION" == "2" ]; then colcon build --packages-skip pcl_recorder; else catkin_make install; fi'
 
 # replace entrypoint
 COPY ./docker/content/ros_entrypoint.sh /
